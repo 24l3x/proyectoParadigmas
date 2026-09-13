@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+:root{
+    --primary-color: #4263EB;
+    --text-primary: #1b1b1b;
+    --text-secondary: #6b7280;
+    --background-light: #d4d4d4;
+    --border-color: #e5e7eb;
+    --base-font-size: 15px;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    outline: none;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    line-height: 1.5;
+    background-color: #fff;
+    min-height: 100vh;
+    font-size: var(--base-font-size);
+}
+
+.navbar{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 2rem;
+    background: var(--background-light);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.nav-logo{
+    display: flex;
+    align-items: center;
+}
+
+.logo{
+    height: 48px;
+    width: 48px;
+    object-fit: cover;
+}
+
+.nav-links{
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-links a{
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.nav-links a:hover{
+    color: var(--text-primary);
+}
+
+.nav-buttons{
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.login-btn{
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+}
+
+.login-btn:hover{
+    opacity: 0.9;
+}
+
+.main-content{
+    display: flex;
+    align-items: center;
+
+    flex-direction: column;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+    min-height: 100vh
+}
+.content1{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.content1 hr{
+    width: 100%;
+    border: 1px solid var(--border-color);
+    margin: 1rem 0;
+}
+
+/*Recliclado*/
+
+.form-container{
+    background-color: #fff;
+    border-radius: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+    position: relative;
+    overflow: hidden;
+    width: 40%;
+    max-width: 100%;
+    min-height: fit-content;
+    max-height: fit-content;
+}
+
+
+.form-container p{
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0.3px;
+    margin: 20px 0;
+}
+
+
+.form-container button{
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.97rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.form-container button.hidden{
+    background-color: transparent;
+    border-color: #fff;
+}
+
+.form-container form{
+    background-color: var(--background-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 40px;
+    gap: 15px;
+    height: 100%;
+}
+
+.form-container input{
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.97rem;
+    color: var(--text-primary);
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
