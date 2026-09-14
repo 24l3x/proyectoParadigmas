@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  web:
+    image: nginx:alpine
+    container_name: gestorHospital
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html
+    restart: always
+  # Servicio de la Base de Datos MySQL
+  db:
+    image: mysql:latest
+    container_name: DBProyecto
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: Hospital
+      MYSQL_USER: user
+      MYSQL_PASSWORD: host
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql-data-p4:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    networks: 
+      - app-network-p4
+    restart: always
+
+  # Servicio de phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: SGDB
+    environment:
+      PMA_HOST: db  
+      PMA_PORT: 3306
+    ports:
+      - "8084:80"
+    depends_on:
+      - db          
+    networks: 
+      - app-network-p4
+    restart: always
+
+# Define las redes y volúmenes
+networks:
+  app-network-p4:
+    driver: bridge
+
+volumes:
+  mysql-data-p4:
+    driver: local
