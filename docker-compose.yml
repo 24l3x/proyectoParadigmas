@@ -7,9 +7,9 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./html:/usr/share/nginx/html
+      - ./Frontend:/usr/share/nginx/html
     restart: always
-  # Servicio de la Base de Datos MySQL
+
   db:
     image: mysql:latest
     container_name: DBProyecto
@@ -27,7 +27,6 @@ services:
       - app-network-p4
     restart: always
 
-  # Servicio de phpMyAdmin
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: SGDB
@@ -42,7 +41,20 @@ services:
       - app-network-p4
     restart: always
 
-# Define las redes y volúmenes
+  # NUEVO: Servicio de Python (Backend)
+  backend:
+    build: ./Backend
+    container_name: API_Hospital
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Backend:/app
+    depends_on:
+      - db
+    networks:
+      - app-network-p4
+    restart: always
+
 networks:
   app-network-p4:
     driver: bridge
