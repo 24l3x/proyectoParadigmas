@@ -1,4 +1,4 @@
 fastapi
 uvicorn
 SQLAlchemy
-PyMySQL
+psycopg2-binary

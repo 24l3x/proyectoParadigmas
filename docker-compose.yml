@@ -5,48 +5,32 @@ services:
     image: nginx:alpine
     container_name: gestorHospital
     ports:
-      - "8080:80"
+      - "8081:80"
     volumes:
       - ./Frontend:/usr/share/nginx/html
     restart: always
 
   db:
-    image: mysql:latest
-    container_name: DBProyecto
+    image: postgres:15-alpine
+    container_name: DBProyecto_PG
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: Hospital
-      MYSQL_USER: user
-      MYSQL_PASSWORD: host
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: host
+      POSTGRES_DB: Hospital
     ports:
-      - "3309:3306"
+      - "5433:5432"
     volumes:
-      - mysql-data-p4:/var/lib/mysql
+      - postgres-data-p4:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
     networks: 
       - app-network-p4
     restart: always
 
-  phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: SGDB
-    environment:
-      PMA_HOST: db  
-      PMA_PORT: 3306
-    ports:
-      - "8084:80"
-    depends_on:
-      - db          
-    networks: 
-      - app-network-p4
-    restart: always
-
-  # NUEVO: Servicio de Python (Backend)
   backend:
     build: ./Backend
     container_name: API_Hospital
     ports:
-      - "8000:8000"
+      - "8008:8000"
     volumes:
       - ./Backend:/app
     depends_on:
@@ -60,5 +44,5 @@ networks:
     driver: bridge
 
 volumes:
-  mysql-data-p4:
+  postgres-data-p4:
     driver: local
