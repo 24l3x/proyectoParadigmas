@@ -5,6 +5,8 @@
     --text-primary: #1b1b1b;
     --text-secondary: #6b7280;
     --background-light: #d4d4d4;
+    --background: #fbfbf9;
+    --navbar-background: #ecf0f3;
     --border-color: #e5e7eb;
     --base-font-size: 15px;
 }
@@ -16,22 +18,68 @@
     box-sizing: border-box;
 }
 
+html{
+    scroll-behavior: smooth;
+}
+
 body{
     font-family: 'Inter', sans-serif;
     color: var(--text-primary);
     line-height: 1.5;
-    background-color: #fff;
+    background-color:var(--background);
     min-height: 100vh;
+    min-height: 100dvh;
     font-size: var(--base-font-size);
+    dispay: flex;
+    flex-direction: column;
 }
 
 .navbar{
+    width: 100%;
+    padding: 12px 0;
+    background: var(--navbar-background);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav .menu{
+    max-width: 1270px;
+    margin: auto;
+    padding: 0 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 2rem;
-    background: var(--background-light);
-    border-bottom: 1px solid var(--border-color);
+}
+
+.menu ul{
+    display: flex;
+    list-style: none;
+}
+
+.menu ul li a{
+    margin: 0 8px;
+    padding: 10px 12px;
+    display: block;
+    text-decoration: none;
+    font-size: 18px;
+    color: #31344b;
+    transition: 0.3s;
+}
+
+.menu ul li a:hover{
+    color: var(--primary-color);
+}
+
+nav .btn{
+    color: #31344d;
+    font-size: 22px;
+    cursor: pointer;
+    display: none;
+}
+
+#check{
+    display: none;
 }
 
 .nav-logo{
@@ -45,21 +93,6 @@ body{
     object-fit: cover;
 }
 
-.nav-links{
-    display: flex;
-    gap: 2rem;
-}
-
-.nav-links a{
-    text-decoration: none;
-    color: var(--text-secondary);
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-.nav-links a:hover{
-    color: var(--text-primary);
-}
 
 .nav-buttons{
     display: flex;
@@ -84,13 +117,14 @@ body{
 .main-content{
     display: flex;
     align-items: center;
-
     flex-direction: column;
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 4rem 2rem;
-    min-height: 100vh
+    flex-grow: 1;
 }
+
 .content1{
     display: flex;
     align-items: center;
@@ -108,7 +142,7 @@ body{
 /*Recliclado*/
 
 .form-container{
-    background-color: #fff;
+    background-color: var(--primary-color);
     border-radius: 30px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
     position: relative;
@@ -166,4 +200,98 @@ body{
     color: var(--text-primary);
     background-color: #fff;
     transition: all 0.2s ease;
+}
+
+
+/*Responsivo*/
+@media (min-width: 768px) and (max-width: 940px){
+
+    .menu ul{
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        max-width: 40%;
+        height: 100vh;
+        padding-top: 80px;
+        display: block;
+        background:var(--background-light);
+        transition: 0.3s;
+    }
+
+    .menu ul li a{
+        font-size: 20px;
+        text-align: center;
+        box-shadow: none;
+    }
+    nav .bars{
+        display: block;
+    }
+
+    nav .cancel{
+        display: block;
+        position: absolute;
+        top: 25px;
+        right: 30px;
+    }
+
+    #check:checked~ul{
+        left: 0;
+    }
+
+    #check:checked~.bars{
+        display: none;
+    }
+
+    .form-container{
+        width: 55%;
+    }
+
+}
+
+@media (max-width: 767px){
+    .menu ul{
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        max-width: 60%;
+        height: 100vh;
+        padding-top: 80px;
+        display: block;
+        background:var(--background-light);
+        transition: 0.3s;
+    }
+
+    .menu ul li a{
+        font-size: 20px;
+        text-align: center;
+        box-shadow: none;
+    }
+    nav .bars{
+        display: block;
+    }
+
+    nav .cancel{
+        display: block;
+        position: absolute;
+        top: 25px;
+        right: 30px;
+    }
+
+    #check:checked~ul{
+        left: 0;
+    }
+
+    #check:checked~.bars{
+        display: none;
+    }
+
+    .form-container{
+        width: 100%;
+    }
+    .main-content {
+        padding: 2rem 1rem;
+        display: block;
+    }
 }
