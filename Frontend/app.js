@@ -17,25 +17,34 @@ loginForm.addEventListener('submit', async function(evento) {
     btnSubmit.disabled = true;
     btnSubmit.style.opacity = "0.7";
 
-    try {
-        // Aquí va la conexión a python
-        /*
-        const respuesta = await fetch('http://localhost:8000/api/login', {
+try {
+        // Disparamos la petición al puerto 8008
+        const respuesta = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datosUsuario)
+            body: JSON.stringify({
+                user: datosUsuario.user,
+                password: datosUsuario.pass 
+            })
         });
-        const resultado = await respuesta.json();
-        */
 
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Si Python arroja el error 401 (HTTPException)
+        if (!respuesta.ok) {
+            alert("Usuario o contraseña incorrectos. Inténtalo de nuevo.");
+            return; // Detenemos la ejecución aquí
+        }
+
+        // Si todo salió bien, leemos la respuesta y redirigimos
+        const resultado = await respuesta.json();
+        console.log("Acceso concedido:", resultado);
         
-        console.log("JSON enviado a Python:", JSON.stringify(datosUsuario));
+        window.location.href = 'lobby.html';
 
     } catch (error) {
         console.error("Error de conexión con el servidor:", error);
-        alert("No se pudo conectar con el servidor.");
+        alert("No se pudo conectar con el servidor backend.");
     } finally {
+        // Restauramos el botón
         btnSubmit.textContent = textoOriginal;
         btnSubmit.disabled = false;
         btnSubmit.style.opacity = "1";

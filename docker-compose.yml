@@ -8,6 +8,9 @@ services:
       - "8081:80"
     volumes:
       - ./Frontend:/usr/share/nginx/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - app-network-p4
     restart: always
 
   db:
