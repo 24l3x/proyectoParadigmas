@@ -1,0 +1,164 @@
+/* App.css */
+
+/* Reseteamos el fondo de toda la página */
+body {
+  background-color: #f0f4f8; /* Un gris-azul muy claro y limpio */
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Centramos el contenido principal */
+.contenedor-principal {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* Títulos con un azul institucional */
+h1, h2 {
+  color: #1a365d; 
+  text-align: center;
+}
+
+/* Usamos Flexbox para alinear las tarjetas una al lado de la otra */
+.lista-doctores {
+  display: flex;
+  gap: 25px;
+  justify-content: center;
+  flex-wrap: wrap; /* Permite que bajen de línea si la pantalla es pequeña */
+  margin-top: 40px;
+}
+
+/* Estilo individual de cada tarjeta */
+.tarjeta {
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px;
+  width: 250px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Sombra muy sutil */
+  border-top: 4px solid #3182ce; /* Línea decorativa médica en la parte superior */
+  transition: transform 0.2s ease, box-shadow 0.2s ease; /* Animación suave */
+}
+
+/* Efecto al pasar el mouse sobre la tarjeta */
+.tarjeta:hover {
+  transform: translateY(-5px); /* Se levanta un poco */
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); /* La sombra se hace más grande */
+}
+
+.tarjeta h3 {
+  margin-top: 0;
+  color: #2b6cb0;
+}
+
+.tarjeta p {
+  color: #4a5568;
+  font-size: 15px;
+}
+
+/* Estilo del botón */
+.tarjeta button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  background-color: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Efecto al pasar el mouse sobre el botón */
+.tarjeta button:hover {
+  background-color: #2b6cb0;
+}
+
+
+/* --- ESTILOS PARA EL FORMULARIO DE CITAS --- */
+
+.formulario-cita {
+  background-color: white;
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 500px;
+  margin: 40px auto; /* Lo centra en la pantalla */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); /* Una sombra un poco más pronunciada */
+  text-align: center;
+  border-top: 5px solid #3182ce;
+}
+
+.formulario-cita h2 {
+  margin-top: 0;
+  color: #1a365d;
+}
+
+/* El contenedor del formulario para que los elementos vayan de arriba hacia abajo */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Separación entre cada campo de texto */
+  margin-top: 30px;
+}
+
+/* Estilos para los campos de texto (inputs) */
+.formulario input {
+  padding: 15px;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s; /* Para animar cuando le das clic */
+}
+
+/* Efecto cuando el usuario está escribiendo en el campo (focus) */
+.formulario input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+}
+
+/* Estilo para el botón de confirmar (El principal) */
+.formulario button {
+  background-color: #38a169; /* Un verde médico para confirmar */
+  color: white;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 10px;
+}
+
+.formulario button:hover {
+  background-color: #2f855a;
+}
+
+
+.btn-regresar {
+  margin-top: 25px;
+  background-color: transparent;
+  color: #e53e3e; 
+  border: 1px solid #e53e3e;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.btn-regresar:hover {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.mensaje-error {
+  color: #e53e3e;
+  font-size: 14px;
+  margin-top: -10px;
+  margin-bottom: 5px;
+  font-weight: bold;
+}

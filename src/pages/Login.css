@@ -1,0 +1,153 @@
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+
+.login-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.login-form-section {
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 40px;
+}
+
+.login-image-section {
+  flex: 1.5;
+  
+  background: linear-gradient(rgba(26, 54, 93, 0.7), rgba(49, 130, 206, 0.7)), 
+              url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+  background-size: cover;
+  background-position: center;
+}
+
+
+@media (max-width: 768px) {
+  .login-image-section {
+    display: none;
+  }
+}
+
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.login-header h1 {
+  color: #1a365d;
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.login-header p {
+  color: #718096;
+  font-size: 14px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group label {
+  font-size: 14px;
+  color: #2d3748;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.input-group input {
+  padding: 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+}
+
+
+.password-rules {
+  font-size: 12px;
+  color: #718096;
+  margin-top: 8px;
+  padding-left: 18px;
+}
+
+/* Opciones de recordar y recuperar */
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 25px;
+  color: #4a5568;
+}
+
+.login-options a {
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.login-options a:hover {
+  text-decoration: underline;
+  color: coral;
+}
+
+/* Botón principal */
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #8DB9E4; /* Color naranja oscuro inspirado en tu referencia */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.login-btn:hover {
+  background-color: #c05621;
+}
+
+.mensaje-error-login {
+  color: #e53e3e;
+  font-size: 14px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.login-footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+
