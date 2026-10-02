@@ -1,16 +1,22 @@
-# React + Vite
+# Proyecto Paradigmas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Caracteristicas ✨
 
-Currently, two official plugins are available:
+- Frontend: REACT (HTML, CSS y JS)
+- Backend: Python
+- DataBase: Postgresql
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Como usarlo 🚀
+Clona este repositorio: `git clone https://github.com/24l3x/proyectoParadigmas.git`
 
-## React Compiler
+Lo primero, abre una terminal que acepte el comando npm y usa: `npm install`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+El archivo package.js ya tiene lo necesario para ejecutarlo
 
-## Expanding the ESLint configuration
+Posteriormente para levantar el servidor usa: `npm run dev`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Para abrirlo a la red usa `npm run dev -- --host`
+
+## Licencia 📄
+
+Este proyecto tiene una licencia del tipo MIT. Ve el archivo [LICENSE](./LICENSE) para más detalles.
