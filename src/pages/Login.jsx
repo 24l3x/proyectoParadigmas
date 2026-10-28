@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './Login.css'; // Crearemos un archivo CSS específico para no chocar con el otro diseño
+import './Login.css'; 
 
 const tieneLongitud = (contrasena) => contrasena.length >= 8;
 const tieneNumero = (contrasena) => /\d/.test(contrasena);
