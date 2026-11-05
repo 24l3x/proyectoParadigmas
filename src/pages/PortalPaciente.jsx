@@ -15,34 +15,67 @@ const diasDisponibles = [
 
 const horarios = ['09:00 AM', '10:30 AM', '12:00 PM', '04:00 PM'];
 
-const PortalPaciente = () => {
+// Recibimos onCambiarVista en los props
+const PortalPaciente = ({ rol, onCambiarVista }) => { 
   const [diaElegido, setDiaElegido] = useState('Lunes 12');
   const [horaElegida, setHoraElegida] = useState('10:30 AM');
   const [doctorAsignado, setDoctorAsignado] = useState(doctoresGuardia[0]);
   const [mostrarCambioDoctor, setMostrarCambioDoctor] = useState(false);
   const [motivo, setMotivo] = useState('');
+  const [idPaciente, setIdPaciente] = useState('');
+
+  // 1. Función para regresar a la vista anterior
+  const manejarRegresar = () => {
+    // Si es secretaria, vuelve a 'secretaria'. Si es paciente, va a 'dashboard-paciente'
+    onCambiarVista(rol === 'secretaria' ? 'secretaria' : 'dashboard-paciente');
+  };
+
+  // 2. Modificamos la confirmación para que ejecute manejarRegresar() al terminar
+  const manejarConfirmacion = async (e) => {
+    e.preventDefault();
+    
+    // Aquí irá el fetch al backend de Python...
+    alert(`Cita Guardada Exitosamente.\nPaciente: ${rol === 'secretaria' ? idPaciente : 'Elena Rostova'}\nDía: ${diaElegido}\nHora: ${horaElegida}`);
+    
+    // 3. Redirigimos automáticamente después de confirmar
+    manejarRegresar();
+  };
 
   return (
     <div className="min-h-screen bg-slate-50/60 py-10 px-4 font-body text-on-surface">
       <div className="max-w-2xl mx-auto flex flex-col gap-6">
         
-        {/* Cabecera del Paciente */}
+        {/* Cabecera dinámica */}
         <div className="flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-outline-light">
           <div className="flex items-center gap-2.5">
             <span className="material-symbols-outlined text-primary text-2xl">local_hospital</span>
-            <span className="font-headline font-bold text-base">CarePoint • Portal de Pacientes</span>
+            <span className="font-headline font-bold text-base">
+              {rol === 'secretaria' ? 'CarePoint • Nueva Cita (Administración)' : 'CarePoint • Portal de Pacientes'}
+            </span>
           </div>
-          <span className="text-xs font-medium text-on-surface-muted">Hola, Elena Rostova</span>
+          {rol === 'paciente' && (
+            <span className="text-xs font-medium text-on-surface-muted">Hola, Elena Rostova</span>
+          )}
         </div>
 
-        {/* Tarjeta Principal de Agendado */}
-        <div className="bg-white border border-outline-light rounded-xl p-6 shadow-2xs flex flex-col gap-6">
-          <div>
-            <h1 className="font-headline text-xl font-bold text-on-surface">Agendar Nueva Cita</h1>
-            <p className="text-xs text-on-surface-muted mt-1">
-              Selecciona el día y horario que prefieras. Nosotros te asignaremos al médico con menor tiempo de espera.
-            </p>
-          </div>
+        <form onSubmit={manejarConfirmacion} className="bg-white border border-outline-light rounded-xl p-6 shadow-2xs flex flex-col gap-6">
+          
+          {/* Si es secretaria, mostramos el buscador de pacientes */}
+          {rol === 'secretaria' && (
+             <div>
+               <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-muted block mb-2">
+                 Buscar Paciente (ID o Nombre)
+               </label>
+               <input
+                 type="text"
+                 value={idPaciente}
+                 onChange={(e) => setIdPaciente(e.target.value)}
+                 required
+                 placeholder="Ej. PAC-0912 o Juan Pérez"
+                 className="w-full px-3.5 py-2 bg-slate-50 border border-outline-light rounded-lg text-xs focus:bg-white focus:outline-none focus:border-primary"
+               />
+             </div>
+          )}
 
           {/* Paso 1: Elegir Día */}
           <div>
@@ -162,28 +195,39 @@ const PortalPaciente = () => {
             )}
           </div>
 
-          {/* Motivo corto */}
+          {/* Motivo corto (existente) */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-muted block mb-2">
-              3. Motivo breve de la consulta
+              Motivo breve de la consulta
             </label>
             <input
               type="text"
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
+              required
               placeholder="Ej. Dolor de cabeza frecuente, revisión general..."
               className="w-full px-3.5 py-2 bg-slate-50 border border-outline-light rounded-lg text-xs focus:bg-white focus:outline-none focus:border-primary"
             />
           </div>
 
-          {/* Botón de Confirmación */}
-          <button
-            type="button"
-            className="w-full py-3 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-hover transition-colors shadow-xs"
-          >
-            Confirmar Cita para el {diaElegido} a las {horaElegida}
-          </button>
-        </div>
+          {/* NUEVO: Contenedor con ambos botones (Cancelar y Confirmar) */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              type="button"
+              onClick={manejarRegresar}
+              className="w-full sm:w-1/3 py-3 bg-white border border-outline-light text-on-surface-variant rounded-xl text-xs font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all shadow-xs"
+            >
+              Cancelar y Regresar
+            </button>
+            <button
+              type="submit"
+              className="w-full sm:w-2/3 py-3 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-hover transition-colors shadow-xs"
+            >
+              Confirmar Cita para el {diaElegido}
+            </button>
+          </div>
+          
+        </form>
       </div>
     </div>
   );

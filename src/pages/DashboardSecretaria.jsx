@@ -137,10 +137,10 @@ const DashboardSecretaria = ({ onCambiarVista }) => {
                   <h1 className="font-headline text-2xl font-bold text-on-surface tracking-tight">Citas del Día</h1>
                   <p className="text-xs text-on-surface-muted mt-0.5">Gestiona las consultas programadas para hoy</p>
                 </div>
-                <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-hover shadow-xs transition-colors" type="button">
-                  <span className="material-symbols-outlined text-[18px]">add</span>
-                  <span>Nueva Cita</span>
-                </button>
+                  <button onClick={() => onCambiarVista('nueva-cita-secretaria')} className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-hover shadow-xs transition-colors" type="button">
+                    <span className="material-symbols-outlined text-[18px]">add</span>
+                    <span>Nueva Cita</span>
+                  </button>
               </div>
 
               {/* Resumen Simple (3 tarjetas limpias) */}
