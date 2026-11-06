@@ -40,13 +40,25 @@ function App() {
         <DashboardDoctor usuario={usuarioActual} onLogout={handleLogout} />
       )}
       
-      {/* Ya no requerimos la validación doble de 'dashboard-paciente' */}
-      {usuarioActual && (vistaActual === 'paciente' || vistaActual === 'nueva-cita-secretaria') && (
+      {/* Vista de "Mis Citas" del Paciente (El Dashboard principal) */}
+      {usuarioActual && vistaActual === 'paciente' && (
+        <PortalPaciente 
+          usuario={usuarioActual}
+          rol="paciente" 
+          onCambiarVista={setVistaActual}
+          onLogout={handleLogout}
+          mostrarSoloAgendar={false} // Nueva prop
+        />
+      )}
+
+      {/* Vistas Temporales para "Agendar Nueva Cita" (Tanto Paciente como Secretaria) */}
+      {usuarioActual && (vistaActual === 'nueva-cita-secretaria' || vistaActual === 'nueva-cita-paciente') && (
         <PortalPaciente 
           usuario={usuarioActual}
           rol={vistaActual === 'nueva-cita-secretaria' ? 'secretaria' : 'paciente'} 
           onCambiarVista={setVistaActual}
           onLogout={handleLogout}
+          mostrarSoloAgendar={true} // Nueva prop
         />
       )}
 
