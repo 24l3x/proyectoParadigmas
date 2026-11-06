@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import SidebarHospital from '../components/SidebarHospital';
 import HeaderHospital from '../components/HeaderHospital';
 import CitasDelDia from '../components/CitasDelDia';
-import CalendarioSemanal from '../components/CalendarioSemanal'; // Utiliza el que ya tenías guardado
+import CalendarioSemanal from '../components/CalendarioSemanal';
 
-const DashboardSecretaria = ({ usuario, onLogout }) => {
+const DashboardSecretaria = ({ usuario, onCambiarVista, onLogout }) => {
   const [pestañaActiva, setPestañaActiva] = useState('citas');
 
   return (
@@ -17,7 +17,11 @@ const DashboardSecretaria = ({ usuario, onLogout }) => {
       <div className="pl-56">
         <HeaderHospital usuario={usuario} />
         <main className="w-full pt-24 px-8 pb-8 max-w-6xl mx-auto">
-          {pestañaActiva === 'calendario' ? <CalendarioSemanal /> : <CitasDelDia />}
+          {pestañaActiva === 'calendario' ? (
+            <CalendarioSemanal />
+          ) : (
+            <CitasDelDia onCambiarVista={onCambiarVista} />
+          )}
         </main>
       </div>
     </div>
