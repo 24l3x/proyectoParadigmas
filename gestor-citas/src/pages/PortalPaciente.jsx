@@ -48,7 +48,8 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
     }
 
     // Determinar qué num_paciente y qué creador_por_usuario enviar a la base de datos
-    const numPacienteBD = rol === 'secretaria' ? idPaciente : (usuario?.num_paciente || "PAC-DEMO-001");
+    // Ahora tomará dinámicamente el número del paciente que inició sesión
+    const numPacienteBD = rol === 'secretaria' ? idPaciente : usuario?.num_paciente;
     // El id (UUID) se guardó durante el login. Si es undefined usamos un valor mock para evitar errores.
     const usuarioCreador = usuario?.id || "00000000-0000-0000-0000-000000000000";
 

@@ -50,7 +50,8 @@ const Login = ({ onLoginSuccess }) => {
           onLoginSuccess({
             nombre: data.nombre,
             rol: data.rol,
-            id: data.id_usuario
+            id: data.id_usuario,
+            num_paciente: data.num_paciente
           });
         } else {
           const errorData = await response.json();

@@ -27,7 +27,8 @@ def login(req: schemas.LoginRequest, db: Session = Depends(get_db)):
         "mensaje": "Éxito", 
         "rol": user.rol,
         "nombre": user.nombre,
-        "id_usuario": str(user.id_usuario)
+        "id_usuario": str(user.id_usuario),
+        "num_paciente": getattr(user, 'num_paciente', None)
     }
 
 @app.post("/api/citas", response_model=schemas.CitaResponse)
