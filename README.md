@@ -9,13 +9,23 @@
 ## Como usarlo 🚀
 Clona este repositorio: `git clone https://github.com/24l3x/proyectoParadigmas.git`
 
-Lo primero, abre una terminal que acepte el comando npm y usa: `npm install`
+#### Instalar Frontend
+Entra a `proyectoParadigmas\gestor-citas`,
+abre una terminal que acepte el comando npm y usa: `npm install`.
 
-El archivo package.js ya tiene lo necesario para ejecutarlo
+El archivo package.js ya tiene lo necesario para ejecutarlo,
 
-Posteriormente para levantar el servidor usa: `npm run dev`
+Posteriormente para levantar el frontend usa: `npm run dev`.
 
-Para abrirlo a la red usa `npm run dev -- --host`
+
+#### Instalar Backend
+Entra a `proyectoParadigmas\backend`.
+
+(Opcional) Crea un entorno virtual con `python -m venv venv` y abrelo usando `.\venv\Scripts\activate` en Windows o `source venv/bin/activate` en Linux/Mac.
+
+Posteriormente, instala las dependencias con `pip install -r requirements.txt` ,
+
+Y finalmente levanta el servidor backend `uvicorn main:app --reload`.
 
 ## Licencia 📄
 

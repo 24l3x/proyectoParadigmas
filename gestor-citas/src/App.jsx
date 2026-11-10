@@ -15,8 +15,12 @@ function App() {
 
   const handleLoginSuccess = (usuario) => {
     setUsuarioActual(usuario);
-    // Ahora mandamos al paciente directamente a 'paciente' en lugar de 'dashboard-paciente'
-    setVistaActual(usuario.rol);
+    
+    // Normalizamos el rol a minúsculas y le quitamos espacios extra 
+    // para que coincida perfectamente con nuestras vistas
+    const rolSeguro = usuario.rol ? String(usuario.rol).toLowerCase().trim() : 'login';
+    
+    setVistaActual(rolSeguro);
   };
 
   const setDemoUser = (rol) => {

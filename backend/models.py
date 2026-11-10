@@ -1,63 +1,65 @@
-from sqlalchemy import Column, Integer, String, Date, Time, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Date, Time, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.sql import text
 
 Base = declarative_base()
 
 class Usuario(Base):
-    __tablename__ = 'Usuario'
-    id_usuario = Column(Integer, primary_key=True, autoincrement=True) #[cite: 4]
-    nombre = Column(String) #[cite: 3, 4]
-    apellido = Column(String) #[cite: 3, 4]
-    contrasena = Column(String) #[cite: 3, 4]
-    rol = Column(String) #[cite: 3, 4]
-    estado = Column(String) #[cite: 3, 4]
+    __tablename__ = 'usuario'
+    id_usuario = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")) #[cite: 9]
+    nombre = Column(String, nullable=False) #[cite: 9]
+    apellidos = Column(String, nullable=False) #[cite: 9]
+    contrasena = Column(String, nullable=False) #[cite: 9]
+    rol = Column(String, nullable=False) #[cite: 9]
+    estado = Column(String, nullable=False) #[cite: 9]
+    correo = Column(String)
     
-    # Configuración de herencia polimórfica
     __mapper_args__ = {
         'polymorphic_on': rol,
         'polymorphic_identity': 'usuario'
     }
 
-    def validarContrasena(self, password_input: str) -> bool: #[cite: 3]
+    def validarContrasena(self, password_input: str) -> bool: 
         return self.contrasena == password_input
 
 class Paciente(Usuario):
-    __tablename__ = 'Paciente'
-    num_paciente = Column(String, primary_key=True) #[cite: 4]
-    id_usuario = Column(Integer, ForeignKey('Usuario.id_usuario', ondelete="CASCADE", onupdate="CASCADE"), unique=True) #[cite: 4]
-    estado_clinico = Column(String) #[cite: 3, 4]
+    __tablename__ = 'paciente'
+    id_usuario = Column(UUID(as_uuid=True), ForeignKey('usuario.id_usuario'), primary_key=True) #[cite: 9]
+    num_paciente = Column(String, unique=True, nullable=False) #[cite: 9]
+    estado_clinico = Column(String) #[cite: 9]
     
-    citas = relationship("Cita", back_populates="paciente")
-    expediente = relationship("Expediente", back_populates="paciente", uselist=False)
+    citas_como_paciente = relationship("Cita", foreign_keys="[Cita.num_paciente]", back_populates="paciente_obj")
 
     __mapper_args__ = {
         'polymorphic_identity': 'paciente'
     }
 
 class Empleado(Usuario):
-    __tablename__ = 'Empleado'
-    num_empleado = Column(String, primary_key=True) #[cite: 4]
-    id_usuario = Column(Integer, ForeignKey('Usuario.id_usuario', ondelete="CASCADE", onupdate="CASCADE"), unique=True) #[cite: 4]
-    telefono = Column(String) #[cite: 3, 4]
-    lugar_asignado = Column(String) #[cite: 3, 4]
-    horario = Column(String) #[cite: 3, 4]
-    especialidad = Column(String) #[cite: 4]
+    __tablename__ = 'empleado'
+    id_usuario = Column(UUID(as_uuid=True), ForeignKey('usuario.id_usuario'), primary_key=True) #[cite: 9]
+    num_empleado = Column(String, unique=True, nullable=False) #[cite: 9]
+    telefono = Column(String) #[cite: 9]
 
-    citas_atendidas = relationship("Cita", back_populates="empleado")
+    citas_atendidas = relationship("Cita", foreign_keys="[Cita.num_empleado_medico]", back_populates="empleado_obj")
 
     __mapper_args__ = {
-        'polymorphic_identity': 'empleado'
+        'polymorphic_identity': 'empleado',
+        'polymorphic_identity': 'secretaria', 
+        'polymorphic_identity': 'doctor'      
     }
 
 class Cita(Base):
-    __tablename__ = 'Cita'
-    num_cita = Column(Integer, primary_key=True, autoincrement=True) #[cite: 4]
-    fecha = Column(Date) #[cite: 3, 4]
-    hora = Column(Time) #[cite: 3, 4]
-    estado = Column(String) #[cite: 3, 4]
-    motivo_cancelacion = Column(String) #[cite: 3, 4]
-    num_paciente = Column(String, ForeignKey('Paciente.num_paciente', ondelete="CASCADE", onupdate="CASCADE")) #[cite: 4]
-    num_empleado = Column(String, ForeignKey('Empleado.num_empleado', ondelete="CASCADE", onupdate="CASCADE")) #[cite: 4]
+    __tablename__ = 'cita'
+    num_cita = Column(Integer, primary_key=True, autoincrement=True) #[cite: 9]
+    fecha = Column(Date, nullable=False) #[cite: 9]
+    hora = Column(Time, nullable=False) #[cite: 9]
+    estado = Column(String, nullable=False) #[cite: 9]
+    mot_cancelacion = Column(String) #[cite: 9]
+    num_paciente = Column(String, ForeignKey('paciente.num_paciente')) #[cite: 9]
+    num_empleado_medico = Column(String, ForeignKey('empleado.num_empleado')) #[cite: 9]
+    creada_por_usuario = Column(UUID(as_uuid=True), ForeignKey('usuario.id_usuario')) #[cite: 9]
 
-    paciente = relationship("Paciente", back_populates="citas")
-    empleado = relationship("Empleado", back_populates="citas_atendidas")
+    paciente_obj = relationship("Paciente", foreign_keys=[num_paciente], back_populates="citas_como_paciente")
+    empleado_obj = relationship("Empleado", foreign_keys=[num_empleado_medico], back_populates="citas_atendidas")
+    creador_obj = relationship("Usuario", foreign_keys=[creada_por_usuario])

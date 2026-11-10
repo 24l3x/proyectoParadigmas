@@ -23,32 +23,84 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
   const [mostrarCambioDoctor, setMostrarCambioDoctor] = useState(false);
   const [motivo, setMotivo] = useState('');
   const [idPaciente, setIdPaciente] = useState('');
+  
+  // Estado extra para deshabilitar el botón mientras carga la petición
+  const [cargando, setCargando] = useState(false);
 
   const manejarRegresar = () => {
     // Si es secretaria vuelve a su dashboard, si es paciente vuelve a 'paciente' (Mis Citas)
     onCambiarVista(rol === 'secretaria' ? 'secretaria' : 'paciente');
   };
 
-  const manejarConfirmacion = (e) => {
+  const manejarConfirmacion = async (e) => {
     e.preventDefault();
     if (!motivo) return alert("Por favor ingresa un motivo breve para la consulta.");
 
-    alert(`Cita Guardada Exitosamente.\nPaciente: ${rol === 'secretaria' ? idPaciente : usuario?.nombre || 'Elena Rostova'}\nDía: ${diaElegido.dia}\nHora: ${horaElegida}`);
+    // 1. Preparar la estructura de datos que espera el backend de Python (FastAPI/Pydantic)
+    // El backend espera fechas 'YYYY-MM-DD' y horas 'HH:MM:SS'. Aquí hacemos un formato rápido para el MVP.
+    let fechaReal = diaElegido.dia.includes("13") ? "2026-10-13" : "2026-10-12"; 
     
-    // Si es paciente, agregamos a su historial visual. Luego regresamos a la vista anterior
-    if (rol === 'paciente') {
-      const nuevaCita = {
-        id: Math.floor(Math.random() * 10000) + 1000,
-        fechaCompleta: `${diaElegido.dia} a las ${horaElegida}`,
-        doctor: doctorAsignado.nombre,
-        especialidad: doctorAsignado.especialidad,
-        cancelable: true
-      };
-      setCitasHistorial([nuevaCita, ...citasHistorial]);
-      setMotivo('');
+    // Transformar "09:30 AM" a "09:30:00" y ajustar a 24 horas si es PM
+    let horaReal = horaElegida.split(' ')[0] + ":00";
+    if (horaElegida.includes("PM") && !horaElegida.startsWith("12")) {
+       let partes = horaElegida.split(' ')[0].split(':');
+       horaReal = `${parseInt(partes[0]) + 12}:${partes[1]}:00`;
     }
-    
-    manejarRegresar();
+
+    // Determinar qué num_paciente y qué creador_por_usuario enviar a la base de datos
+    const numPacienteBD = rol === 'secretaria' ? idPaciente : (usuario?.num_paciente || "PAC-DEMO-001");
+    // El id (UUID) se guardó durante el login. Si es undefined usamos un valor mock para evitar errores.
+    const usuarioCreador = usuario?.id || "00000000-0000-0000-0000-000000000000";
+
+    const datosCita = {
+      fecha: fechaReal,
+      hora: horaReal,
+      num_paciente: numPacienteBD,
+      num_empleado_medico: "EMP-00" + doctorAsignado.id, // Simulamos el num_empleado del médico seleccionado
+      creada_por_usuario: usuarioCreador
+    };
+
+    setCargando(true);
+
+    // 2. Enviar la petición HTTP al Backend en Python (FastAPI)
+    try {
+      const respuesta = await fetch('http://localhost:8000/api/citas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datosCita),
+      });
+
+      if (respuesta.ok) {
+        const citaCreada = await respuesta.json(); // El backend nos devuelve la Cita (incluyendo el num_cita auto-generado)
+        alert(`Cita Guardada Exitosamente.\nFolio BD: ${citaCreada.num_cita}\nPaciente: ${rol === 'secretaria' ? idPaciente : usuario?.nombre || 'Elena Rostova'}\nDía: ${diaElegido.dia}\nHora: ${horaElegida}`);
+        
+        // Si es paciente, actualizamos su historial de la pantalla
+        if (rol === 'paciente') {
+          const nuevaCitaUi = {
+            id: citaCreada.num_cita, // Usamos el ID real de la base de datos
+            fechaCompleta: `${diaElegido.dia} a las ${horaElegida}`,
+            doctor: doctorAsignado.nombre,
+            especialidad: doctorAsignado.especialidad,
+            cancelable: true
+          };
+          setCitasHistorial([nuevaCitaUi, ...citasHistorial]);
+          setMotivo('');
+        }
+        
+        manejarRegresar(); // Volvemos a la vista anterior
+      } else {
+        // La API retornó un error (Ej. Paciente no existe)
+        const errorData = await respuesta.json();
+        alert(`No se pudo crear la cita: ${errorData.detail || 'Verifique los datos'}`);
+      }
+    } catch (error) {
+      console.error("Error al conectar con la API:", error);
+      alert("Error de conexión. Asegúrese de que el servidor Backend (Python) esté corriendo en el puerto 8000.");
+    } finally {
+      setCargando(false);
+    }
   };
 
   const handleCancelar = (id) => {
@@ -83,7 +135,6 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
                 <h1 className="font-headline text-2xl font-bold text-on-surface tracking-tight">Mis Citas</h1>
                 <p className="text-xs text-on-surface-muted mt-0.5">Historial y próximas consultas programadas</p>
               </div>
-              {/* Nuevo Botón de Agendar que redirige a la vista temporal */}
               <button 
                 onClick={() => onCambiarVista('nueva-cita-paciente')} 
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-hover shadow-xs transition-colors" 
@@ -195,11 +246,11 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 border-t border-outline-light pt-6 mt-2">
-              <button type="button" onClick={manejarRegresar} className="w-full sm:w-1/3 py-3 bg-white border border-outline-light text-on-surface-variant rounded-xl text-xs font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all shadow-xs">
+              <button type="button" onClick={manejarRegresar} disabled={cargando} className="w-full sm:w-1/3 py-3 bg-white border border-outline-light text-on-surface-variant rounded-xl text-xs font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all shadow-xs">
                 Cancelar y Regresar
               </button>
-              <button type="submit" className="w-full sm:w-2/3 py-3 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-hover transition-colors shadow-xs">
-                Confirmar Cita para el {diaElegido.dia}
+              <button type="submit" disabled={cargando} className={`w-full sm:w-2/3 py-3 text-white rounded-xl text-xs font-bold shadow-xs transition-colors ${cargando ? 'bg-teal-900 cursor-wait' : 'bg-primary hover:bg-primary-hover'}`}>
+                {cargando ? 'Procesando en BD...' : `Confirmar Cita para el ${diaElegido.dia}`}
               </button>
             </div>
           </form>
