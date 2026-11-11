@@ -6,7 +6,6 @@ from database import engine, get_db
 
 app = FastAPI(title="CarePoint API")
 
-# Permite que React (puerto 5173) se comunique con FastAPI (puerto 8000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"], 
@@ -17,27 +16,43 @@ app.add_middleware(
 
 @app.post("/api/login")
 def login(req: schemas.LoginRequest, db: Session = Depends(get_db)):
-    # Busca al usuario usando el correo en lugar del nombre
-    user = db.query(models.Usuario).filter(models.Usuario.correo == req.correo).first()
+    user = models.Usuario.iniciarSesion(db, req.correo, req.contrasena)
     
-    if not user or not user.validarContrasena(req.contrasena):
+    if not user:
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
         
     return {
         "mensaje": "Éxito", 
-        "rol": user.rol,
+        "rol": user.rol.lower(), 
         "nombre": user.nombre,
         "id_usuario": str(user.id_usuario),
         "num_paciente": getattr(user, 'num_paciente', None)
     }
 
+
 @app.post("/api/citas", response_model=schemas.CitaResponse)
-def agendar_cita(cita: schemas.CitaCreate, db: Session = Depends(get_db)):
-    # Instancia una nueva cita y establece el estado inicial
-    nueva_cita = models.Cita(**cita.dict(), estado="Pendiente")
+def agendar_cita(cita_req: schemas.CitaCreate, db: Session = Depends(get_db)):
+    creador = db.query(models.Usuario).filter(models.Usuario.id_usuario == cita_req.creada_por_usuario).first()
     
-    db.add(nueva_cita)
-    db.commit()
-    db.refresh(nueva_cita)
+    if not creador:
+        raise HTTPException(status_code=404, detail="Usuario creador no encontrado")
     
+    if isinstance(creador, models.Paciente):
+        nueva_cita = creador.agendarCita(
+            db, 
+            fecha=cita_req.fecha, 
+            hora=cita_req.hora, 
+            num_medico=cita_req.num_empleado_medico
+        )
+    elif isinstance(creador, models.Asistente):
+        nueva_cita = creador.agendarCita(
+            db, 
+            fecha=cita_req.fecha, 
+            hora=cita_req.hora, 
+            num_paciente_ingresado=cita_req.num_paciente,
+            num_medico=cita_req.num_empleado_medico
+        )
+    else:
+        raise HTTPException(status_code=403, detail="Este rol no tiene permisos para agendar citas")
+        
     return nueva_cita
