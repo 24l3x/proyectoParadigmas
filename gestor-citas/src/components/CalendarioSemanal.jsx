@@ -1,63 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
-const datosSemana = [
-  {
-    dia: 'Lunes',
-    fecha: '12 Oct',
-    ocupadas: 3,
-    capacidad: 10,
-    citas: [
-      { id: 1, hora: '09:00 AM', paciente: 'Elena Rostova', doctor: 'Dr. Ruiz' },
-      { id: 2, hora: '10:30 AM', paciente: 'Marco Polo', doctor: 'Dra. Salas' },
-      { id: 3, hora: '12:00 PM', paciente: 'Ana Gómez', doctor: 'Dr. Ruiz' },
-    ]
-  },
-  {
-    dia: 'Martes',
-    fecha: '13 Oct',
-    ocupadas: 7,
-    capacidad: 10,
-    citas: [
-      { id: 4, hora: '08:00 AM', paciente: 'Luis Pérez', doctor: 'Dr. Castro' },
-      { id: 5, hora: '09:00 AM', paciente: 'Sofía Vargas', doctor: 'Dra. Salas' },
-      { id: 6, hora: '11:00 AM', paciente: 'Jorge Ríos', doctor: 'Dr. Ruiz' },
-      { id: 7, hora: '01:00 PM', paciente: 'Diana Paz', doctor: 'Dr. Castro' },
-    ]
-  },
-  {
-    dia: 'Miércoles',
-    fecha: '14 Oct',
-    ocupadas: 10,
-    capacidad: 10,
-    citas: [
-      { id: 8, hora: '08:00 AM', paciente: 'Carlos Slim', doctor: 'Dr. Ruiz' },
-      { id: 9, hora: '09:30 AM', paciente: 'Marta Díaz', doctor: 'Dra. Salas' },
-      { id: 10, hora: '11:00 AM', paciente: 'Pedro Páramo', doctor: 'Dr. Castro' },
-    ]
-  },
-  {
-    dia: 'Jueves',
-    fecha: '15 Oct',
-    ocupadas: 2,
-    capacidad: 10,
-    citas: [
-      { id: 11, hora: '10:00 AM', paciente: 'Lucía Méndez', doctor: 'Dra. Salas' },
-      { id: 12, hora: '04:00 PM', paciente: 'Raúl Velasco', doctor: 'Dr. Ruiz' },
-    ]
-  },
-  {
-    dia: 'Viernes',
-    fecha: '16 Oct',
-    ocupadas: 6,
-    capacidad: 10,
-    citas: [
-      { id: 13, hora: '09:00 AM', paciente: 'Andrés Bello', doctor: 'Dr. Castro' },
-      { id: 14, hora: '11:30 AM', paciente: 'Carla Morrison', doctor: 'Dra. Salas' },
-    ]
+const formatearHora12 = (hora24) => {
+  if (!hora24) return '';
+  if (hora24.includes('AM') || hora24.includes('PM')) return hora24;
+  const partes = String(hora24).split(':');
+  let h = parseInt(partes[0], 10);
+  const m = partes[1] || '00';
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
+};
+
+const generarSemanaActual = () => {
+  const diasNombres = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const mesesNombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const base = new Date();
+  const dias = [];
+
+  for (let i = 0; i < 7; i++) {
+    const f = new Date(base);
+    f.setHours(0, 0, 0, 0);
+    f.setDate(f.getDate() + i);
+    const yyyy = f.getFullYear();
+    const mm = String(f.getMonth() + 1).padStart(2, '0');
+    const dd = String(f.getDate()).padStart(2, '0');
+    const fechaISO = `${yyyy}-${mm}-${dd}`;
+    dias.push({
+      dia: i === 0 ? `Hoy (${diasNombres[f.getDay()]})` : diasNombres[f.getDay()],
+      fecha: `${f.getDate()} ${mesesNombres[f.getMonth()]}`,
+      fechaISO,
+      capacidad: 10
+    });
   }
-];
+  return dias;
+};
 
-// Función que determina el color del semáforo según porcentaje de ocupación
 const obtenerEstiloSemaforo = (ocupadas, capacidad) => {
   const porcentaje = (ocupadas / capacidad) * 100;
   if (porcentaje >= 85) {
@@ -85,15 +62,48 @@ const obtenerEstiloSemaforo = (ocupadas, capacidad) => {
 };
 
 const CalendarioSemanal = () => {
-  const [diaSeleccionado, setDiaSeleccionado] = useState(datosSemana[0]);
+  const [diasBase] = useState(() => generarSemanaActual());
+  const [citasBD, setCitasBD] = useState([]);
+  const [fechaSeleccionadaISO, setFechaSeleccionadaISO] = useState(() => diasBase[0].fechaISO);
+
+  const cargarCitas = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/citas');
+      if (res.ok) {
+        const data = await res.json();
+        setCitasBD(data);
+      }
+    } catch (error) {
+      console.error('Error al cargar calendario desde BD:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarCitas();
+    const intervalo = setInterval(cargarCitas, 5000);
+    return () => clearInterval(intervalo);
+  }, [cargarCitas]);
+
+  const datosSemana = diasBase.map((d) => {
+    const citasDia = citasBD.filter(
+      (c) => c.fecha === d.fechaISO && (c.estado || '').toLowerCase() !== 'cancelada'
+    );
+    return {
+      ...d,
+      ocupadas: citasDia.length,
+      citas: citasDia
+    };
+  });
+
+  const diaSeleccionado = datosSemana.find((d) => d.fechaISO === fechaSeleccionadaISO) || datosSemana[0];
 
   return (
     <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
       {/* Encabezado y Leyenda del Semáforo */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="font-headline text-2xl font-bold text-on-surface tracking-tight">Calendario Semanal</h1>
-          <p className="text-xs text-on-surface-muted mt-0.5">Disponibilidad de la clínica del 12 al 16 de Octubre</p>
+          <h1 className="font-headline text-2xl font-bold text-on-surface tracking-tight">Calendario Semanal (Próximos 7 Días)</h1>
+          <p className="text-xs text-on-surface-muted mt-0.5">Sincronizado dinámicamente con las citas registradas en la base de datos</p>
         </div>
 
         {/* Leyenda de colores */}
@@ -110,35 +120,34 @@ const CalendarioSemanal = () => {
         </div>
       </div>
 
-      {/* Grid de los 5 días (Semáforo) */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      {/* Grid de los 7 días (Semáforo) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
         {datosSemana.map((item) => {
           const semaforo = obtenerEstiloSemaforo(item.ocupadas, item.capacidad);
-          const activo = diaSeleccionado.dia === item.dia;
-          const porcentaje = Math.round((item.ocupadas / item.capacidad) * 100);
+          const activo = diaSeleccionado.fechaISO === item.fechaISO;
+          const porcentaje = Math.min(100, Math.round((item.ocupadas / item.capacidad) * 100));
 
           return (
             <div
-              key={item.dia}
-              onClick={() => setDiaSeleccionado(item)}
-              className={`rounded-xl border p-4 cursor-pointer transition-all flex flex-col justify-between ${semaforo.card} ${
+              key={item.fechaISO}
+              onClick={() => setFechaSeleccionadaISO(item.fechaISO)}
+              className={`rounded-xl border p-3.5 cursor-pointer transition-all flex flex-col justify-between ${semaforo.card} ${
                 activo ? 'ring-2 ring-primary shadow-sm scale-[1.01]' : 'hover:opacity-90'
               }`}
             >
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-headline font-bold text-base text-slate-800">{item.dia}</span>
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${semaforo.badge}`}>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <span className="font-headline font-bold text-xs text-slate-800">{item.dia}</span>
+                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full border ${semaforo.badge}`}>
                     {semaforo.texto}
                   </span>
                 </div>
-                <span className="text-xs text-slate-500 block mb-4">{item.fecha}</span>
+                <span className="text-[11px] text-slate-500 block mb-3">{item.fecha} ({item.fechaISO})</span>
               </div>
 
-              {/* Barra de progreso y contador */}
               <div>
-                <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                  <span>Citas agendadas</span>
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                  <span>Citas</span>
                   <span>{item.ocupadas} / {item.capacidad}</span>
                 </div>
                 <div className="w-full h-2 bg-white/80 rounded-full overflow-hidden border border-slate-200/60">
@@ -155,31 +164,38 @@ const CalendarioSemanal = () => {
         <div className="flex items-center justify-between border-b border-outline-light pb-4 mb-4">
           <div>
             <h2 className="font-headline font-bold text-base text-on-surface">
-              Citas del {diaSeleccionado.dia} ({diaSeleccionado.fecha})
+              Citas del {diaSeleccionado.dia} ({diaSeleccionado.fechaISO})
             </h2>
             <p className="text-xs text-on-surface-muted">
-              Mostrando {diaSeleccionado.citas.length} citas registradas • {diaSeleccionado.capacidad - diaSeleccionado.ocupadas} espacios disponibles
+              Mostrando {diaSeleccionado.citas.length} citas activas • {Math.max(0, diaSeleccionado.capacidad - diaSeleccionado.ocupadas)} espacios disponibles
             </p>
           </div>
-          {diaSeleccionado.ocupadas < diaSeleccionado.capacidad && (
-            <button className="px-3.5 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-hover transition-colors">
-              + Agendar en {diaSeleccionado.dia}
-            </button>
-          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {diaSeleccionado.citas.map((cita) => (
-            <div key={cita.id} className="p-3.5 rounded-lg border border-outline-light bg-slate-50/60 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-primary block">{cita.hora}</span>
-                <span className="text-sm font-semibold text-on-surface block mt-0.5">{cita.paciente}</span>
-                <span className="text-[11px] text-on-surface-muted">{cita.doctor}</span>
+        {diaSeleccionado.citas.length === 0 ? (
+          <div className="p-6 text-center text-xs text-slate-400">
+            No hay citas agendadas para este día.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {diaSeleccionado.citas.map((cita) => (
+              <div key={cita.num_cita} className="p-3.5 rounded-lg border border-outline-light bg-slate-50/60 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-primary block">{formatearHora12(cita.hora)}</span>
+                  <span className="text-sm font-semibold text-on-surface block mt-0.5">
+                    {cita.nombre_paciente || cita.num_paciente}
+                  </span>
+                  <span className="text-[11px] text-on-surface-muted">
+                    #{cita.num_cita} • {cita.nombre_medico}
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">
+                  {cita.estado}
+                </span>
               </div>
-              <span className="material-symbols-outlined text-outline text-lg">chevron_right</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
