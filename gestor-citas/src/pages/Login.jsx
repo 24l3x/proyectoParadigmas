@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import './Login.css';
 
-// Puedes mantener o quitar estas validaciones locales si quieres que el backend haga todo el trabajo.
-// Por ahora las dejamos como capa extra de seguridad frontal.
 const tieneLongitud = (contrasena) => contrasena.length >= 8;
 const tieneNumero = (contrasena) => /\d/.test(contrasena);
 const tieneMayuscula = (contrasena) => /[A-Z]/.test(contrasena);
@@ -22,6 +20,9 @@ const Login = ({ onLoginSuccess }) => {
   const [contrasena, setContrasena] = useState("");
   const [mensajeError, setMensajeError] = useState("");
   const [cargando, setCargando] = useState(false);
+  
+  // Nuevo estado para alternar la visibilidad de la contraseña
+  const [mostrarContrasena, setMostrarContrasena] = useState(false);
 
   const manejarIngreso = async (e) => {
     e.preventDefault();
@@ -38,7 +39,6 @@ const Login = ({ onLoginSuccess }) => {
           headers: {
             'Content-Type': 'application/json',
           },
-          // CORRECCIÓN CLAVE: Enviamos "correo" en lugar de "usuario"
           body: JSON.stringify({ 
             correo: usuario, 
             contrasena: contrasena 
@@ -55,7 +55,6 @@ const Login = ({ onLoginSuccess }) => {
           });
         } else {
           const errorData = await response.json();
-          // PROTECCIÓN PANTALLA BLANCA: Si el error es texto, lo muestra. Si es lista (422), muestra genérico.
           if (typeof errorData.detail === 'string') {
             setMensajeError(errorData.detail);
           } else {
@@ -91,7 +90,36 @@ const Login = ({ onLoginSuccess }) => {
             
             <div className="input-group">
               <label>Contraseña</label>
-              <input type="password" value={contrasena} onChange={(e) => setContrasena(e.target.value)} required />
+              {/* Contenedor relativo para posicionar el icono del ojo */}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input 
+                  type={mostrarContrasena ? "text" : "password"} 
+                  value={contrasena} 
+                  onChange={(e) => setContrasena(e.target.value)} 
+                  required 
+                  style={{ width: '100%', paddingRight: '40px' }} 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setMostrarContrasena(!mostrarContrasena)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#64748b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 0
+                  }}
+                  title={mostrarContrasena ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {mostrarContrasena ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
               <ul className="password-rules">
                 <li>Mínimo 8 caracteres</li>
                 <li>Al menos 1 mayúscula y 1 minúscula</li>
