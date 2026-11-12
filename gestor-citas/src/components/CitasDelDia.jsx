@@ -32,7 +32,6 @@ const CitasDelDia = ({ onCambiarVista }) => {
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
   const [cargando, setCargando] = useState(false);
 
-  // Reloj en tiempo real
   useEffect(() => {
     const timer = setInterval(() => {
       setAhora(new Date());
@@ -95,9 +94,7 @@ const CitasDelDia = ({ onCambiarVista }) => {
     if (!cita) return;
     const horasRestantes = calcularHorasRestantes(cita.fecha, cita.hora, ahora);
     if (horasRestantes < 48) {
-      return alert(
-        `No se puede cancelar la cita #${cita.num_cita}.\nFaltan ${Math.max(0, horasRestantes).toFixed(1)} horas y solo se permite cancelar con 48 horas o más de anticipación.`
-      );
+      return alert('Esta cita no puede ser cancelada. Se requiere un mínimo de 48 horas de anticipación.');
     }
 
     if (!confirm(`¿Confirmas la cancelación de la cita #${cita.num_cita} del paciente ${cita.num_paciente}?`)) {
@@ -108,7 +105,7 @@ const CitasDelDia = ({ onCambiarVista }) => {
       const res = await fetch(`http://localhost:8000/api/citas/${cita.num_cita}/cancelar`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mot_cancelacion: 'Cancelada por secretaría (>= 48 hrs)' })
+        body: JSON.stringify({ mot_cancelacion: 'Cancelada por secretaría' })
       });
       if (res.ok) {
         alert(`Cita #${cita.num_cita} cancelada correctamente.`);
@@ -150,28 +147,19 @@ const CitasDelDia = ({ onCambiarVista }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Banner de fecha y hora actual */}
+      {/* Banner de fecha y hora actual simplificado */}
       <div className="bg-teal-900 text-white px-5 py-3.5 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="material-symbols-outlined text-teal-300 text-2xl">schedule</span>
           <div>
-            <p className="text-xs font-bold capitalize">{fechaHoyTexto}</p>
+            <p className="text-xs font-bold capitalize tracking-wide">{fechaHoyTexto}</p>
             <p className="text-[11px] text-teal-200">
-              Hora actual: <strong className="font-mono text-white">{horaHoyTexto}</strong>
+              Hora actual del sistema: <strong className="font-mono text-white">{horaHoyTexto}</strong>
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 text-[11px]">
-          <span className="px-2.5 py-1 rounded-lg bg-teal-800/90 border border-teal-600 text-teal-100">
-            Agendar: <strong>mín. 2 hrs antes</strong>
-          </span>
-          <span className="px-2.5 py-1 rounded-lg bg-teal-800/90 border border-teal-600 text-teal-100">
-            Cancelar: <strong>mín. 48 hrs antes</strong>
-          </span>
-        </div>
       </div>
 
-      {/* Título y Botones */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-headline text-2xl font-bold text-on-surface tracking-tight">Citas Registradas (Base de Datos)</h1>
@@ -197,7 +185,6 @@ const CitasDelDia = ({ onCambiarVista }) => {
         </div>
       </div>
 
-      {/* Resumen Simple (3 tarjetas limpias) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white border border-outline-light rounded-xl p-4 flex items-center justify-between shadow-2xs">
           <div>
@@ -230,7 +217,6 @@ const CitasDelDia = ({ onCambiarVista }) => {
         </div>
       </div>
 
-      {/* Contenedor Principal: Tabla + Detalle */}
       <div className="grid grid-cols-12 gap-6 items-start">
         <div className="col-span-12 lg:col-span-8 bg-white border border-outline-light rounded-xl overflow-hidden shadow-2xs">
           <table className="w-full text-left border-collapse">
@@ -256,7 +242,9 @@ const CitasDelDia = ({ onCambiarVista }) => {
                   const hrs = calcularHorasRestantes(cita.fecha, cita.hora, ahora);
                   const cancelada = (cita.estado || '').toLowerCase() === 'cancelada';
                   const atendido = (cita.estado || '').toLowerCase() === 'atendido';
-                  const puedeCancelar = !cancelada && !atendido && hrs >= 48;
+                  const completada = (cita.estado || '').toLowerCase() === 'completada';
+                  const bloqueada = cancelada || atendido || completada;
+                  const puedeCancelar = !bloqueada && hrs >= 48;
 
                   return (
                     <tr 
@@ -291,7 +279,7 @@ const CitasDelDia = ({ onCambiarVista }) => {
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                          atendido
+                          atendido || completada
                             ? 'bg-teal-50 text-teal-700'
                             : cancelada
                             ? 'bg-red-50 text-red-700'
@@ -301,16 +289,12 @@ const CitasDelDia = ({ onCambiarVista }) => {
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        {cancelada ? (
-                          <span className="text-[11px] text-red-500 font-medium">Cancelada</span>
+                        {bloqueada ? (
+                          <span className="text-[11px] text-slate-400 font-medium">No disponible</span>
                         ) : puedeCancelar ? (
-                          <span className="text-[11px] text-emerald-700 font-semibold">
-                            Disponible ({hrs.toFixed(0)}h)
-                          </span>
+                          <span className="text-[11px] text-emerald-700 font-semibold">Disponible</span>
                         ) : (
-                          <span className="text-[11px] text-slate-400">
-                            No disp. (&lt;48h)
-                          </span>
+                          <span className="text-[11px] text-slate-400">No disponible</span>
                         )}
                       </td>
                     </tr>
@@ -357,27 +341,10 @@ const CitasDelDia = ({ onCambiarVista }) => {
                 </div>
               </div>
 
-              <div className={`p-3 rounded-lg border text-xs ${
-                horasCitaSel >= 48
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                  : 'bg-amber-50 border-amber-200 text-amber-800'
-              }`}>
-                <span className="font-bold block">
-                  {horasCitaSel >= 0
-                    ? `Tiempo para la cita: ${horasCitaSel.toFixed(1)} horas`
-                    : `Cita pasada hace ${Math.abs(horasCitaSel).toFixed(1)} horas`}
-                </span>
-                <span className="text-[11px]">
-                  {horasCitaSel >= 48
-                    ? 'Cumple con las 48 horas o más: puede cancelarse.'
-                    : 'Faltan menos de 48 horas: cancelación deshabilitada.'}
-                </span>
-              </div>
-
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={() => manejarMarcarAtendido(citaSeleccionada)}
-                  disabled={(citaSeleccionada.estado || '').toLowerCase() === 'cancelada' || (citaSeleccionada.estado || '').toLowerCase() === 'atendido'}
+                  disabled={(citaSeleccionada.estado || '').toLowerCase() === 'cancelada' || (citaSeleccionada.estado || '').toLowerCase() === 'atendido' || (citaSeleccionada.estado || '').toLowerCase() === 'completada'}
                   className="flex-1 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-hover transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
                   type="button"
                 >
@@ -393,7 +360,7 @@ const CitasDelDia = ({ onCambiarVista }) => {
                   }`}
                   type="button"
                 >
-                  {selCancelable ? 'Cancelar Cita' : 'No Cancelable (<48h)'}
+                  Cancelar Cita
                 </button>
               </div>
             </>

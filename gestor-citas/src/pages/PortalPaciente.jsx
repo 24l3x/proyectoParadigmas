@@ -18,7 +18,6 @@ const HORARIOS_DIA = [
   '09:30 PM'
 ];
 
-// Convierte "09:30 AM" o "02:00 PM" a "HH:MM:00" (formato 24h)
 const convertirHoraA24 = (hora12) => {
   const [tiempo, periodo] = hora12.split(' ');
   let [horas, minutos] = tiempo.split(':').map(Number);
@@ -27,7 +26,6 @@ const convertirHoraA24 = (hora12) => {
   return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:00`;
 };
 
-// Convierte "HH:MM:SS" a formato "09:30 AM"
 const formatearHora12 = (hora24) => {
   if (!hora24) return '';
   if (hora24.includes('AM') || hora24.includes('PM')) return hora24;
@@ -39,7 +37,6 @@ const formatearHora12 = (hora24) => {
   return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
 };
 
-// Genera 7 días dinámicos a partir de la fecha actual
 const generarDiasDisponibles = (fechaBase) => {
   const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -70,7 +67,6 @@ const generarDiasDisponibles = (fechaBase) => {
   return lista;
 };
 
-// Calcula cuántas horas faltan desde `ahora` hasta `fechaISO` ("YYYY-MM-DD") + `hora24` ("HH:MM:SS")
 const calcularHorasRestantes = (fechaISO, hora24, ahora) => {
   if (!fechaISO || !hora24) return 0;
   const [yyyy, mm, dd] = String(fechaISO).split('-').map(Number);
@@ -113,7 +109,6 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
   const [buscandoPaciente, setBuscandoPaciente] = useState(false);
   const [cargando, setCargando] = useState(false);
 
-  // Reloj en tiempo real (se actualiza cada segundo)
   useEffect(() => {
     const timer = setInterval(() => {
       setAhora(new Date());
@@ -121,7 +116,6 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
     return () => clearInterval(timer);
   }, []);
 
-  // Obtener citas reales desde el Backend de manera dinámica
   const obtenerCitasBackend = useCallback(async (silencioso = false) => {
     if (!silencioso) setCargandoCitas(true);
     try {
@@ -140,7 +134,6 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
     }
   }, [rol, usuario?.num_paciente]);
 
-  // Cargar al inicio y sincronizar cada 5 segundos con el backend
   useEffect(() => {
     obtenerCitasBackend(false);
     const intervalo = setInterval(() => {
@@ -159,7 +152,7 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
 
   const manejarBuscarPaciente = async () => {
     if (!idPaciente.trim()) {
-      return alert('Por favor ingresa un ID (ej. PAC-001) o nombre de paciente para buscar.');
+      return alert('Por favor ingresa un ID o nombre de paciente para buscar.');
     }
 
     setBuscandoPaciente(true);
@@ -172,11 +165,11 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
       } else {
         setPacienteEncontrado(null);
         const errorData = await respuesta.json().catch(() => ({}));
-        alert(errorData.detail || `No se encontró el paciente '${idPaciente}' en la base de datos.`);
+        alert(errorData.detail || `No se encontró el paciente '${idPaciente}'.`);
       }
     } catch (error) {
       console.error('Error al buscar paciente:', error);
-      alert('Error de conexión al buscar el paciente. Verifique que el Backend esté corriendo.');
+      alert('Error de conexión al buscar el paciente.');
     } finally {
       setBuscandoPaciente(false);
     }
@@ -190,18 +183,15 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
     e.preventDefault();
     if (!motivo) return alert('Por favor ingresa un motivo breve para la consulta.');
     if (rol === 'secretaria' && !idPaciente.trim()) {
-      return alert('Por favor ingresa el ID del paciente (ej. PAC-001).');
+      return alert('Por favor ingresa el ID del paciente.');
     }
 
     const fechaReal = diaElegido.fechaISO;
     const horaReal = convertirHoraA24(horaElegida);
-
-    // Validar que falten al menos 2 horas para la cita
     const horasParaCita = calcularHorasRestantes(fechaReal, horaReal, ahora);
+
     if (horasParaCita < 2) {
-      return alert(
-        `No puedes agendar en este horario (${horaElegida}).\nDebes agendar con al menos 2 horas de anticipación respecto a la hora actual.`
-      );
+      return alert('No puedes agendar en este horario. Debes agendar con al menos 2 horas de anticipación.');
     }
 
     const numPacienteBD = rol === 'secretaria'
@@ -233,12 +223,11 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
         const etiquetaPaciente = rol === 'secretaria'
           ? (pacienteEncontrado ? `${citaCreada.num_paciente} (${pacienteEncontrado.nombre} ${pacienteEncontrado.apellidos})` : citaCreada.num_paciente)
           : (usuario?.nombre || citaCreada.num_paciente);
-        const avisoCancelacion = horasParaCita >= 48
-          ? 'Podrás cancelarla porque faltan 48 horas o más.'
-          : 'Nota: Como faltan menos de 48 horas para esta cita, no podrá ser cancelada.';
+        
+        const avisoCancelacion = horasParaCita < 48 ? '\n\nNota: Esta cita no podrá ser cancelada.' : '';
 
         alert(
-          `Cita Guardada Exitosamente.\nFolio BD: #${citaCreada.num_cita}\nPaciente: ${etiquetaPaciente}\nFecha: ${diaElegido.dia} (${fechaReal})\nHora: ${horaElegida}\n\n${avisoCancelacion}`
+          `Cita Guardada Exitosamente.\nFolio: #${citaCreada.num_cita}\nPaciente: ${etiquetaPaciente}\nFecha: ${diaElegido.dia}\nHora: ${horaElegida}${avisoCancelacion}`
         );
 
         setMotivo('');
@@ -250,7 +239,7 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
       }
     } catch (error) {
       console.error('Error al conectar con la API:', error);
-      alert('Error de conexión. Asegúrese de que el servidor Backend (Python) esté corriendo en el puerto 8000.');
+      alert('Error de conexión. Asegúrese de que el servidor Backend esté corriendo.');
     } finally {
       setCargando(false);
     }
@@ -259,12 +248,10 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
   const handleCancelar = async (cita) => {
     const horasRestantes = calcularHorasRestantes(cita.fecha, cita.hora, ahora);
     if (horasRestantes < 48) {
-      return alert(
-        `No es posible cancelar esta cita.\nFaltan ${Math.max(0, horasRestantes).toFixed(1)} horas y el reglamento exige al menos 48 horas de anticipación.`
-      );
+      return alert('No es posible cancelar esta cita debido a la regla de 48 horas de anticipación.');
     }
 
-    if (!confirm(`¿Estás seguro de cancelar la cita #${cita.num_cita} del ${cita.fecha} a las ${formatearHora12(cita.hora)}?`)) {
+    if (!confirm(`¿Estás seguro de cancelar la cita #${cita.num_cita}?`)) {
       return;
     }
 
@@ -272,7 +259,7 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
       const respuesta = await fetch(`http://localhost:8000/api/citas/${cita.num_cita}/cancelar`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mot_cancelacion: 'Cancelada por el paciente desde el portal (>= 48 hrs)' })
+        body: JSON.stringify({ mot_cancelacion: 'Cancelada por el paciente desde el portal' })
       });
 
       if (respuesta.ok) {
@@ -284,7 +271,7 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
       }
     } catch (error) {
       console.error('Error al cancelar cita:', error);
-      alert('Error de conexión con el servidor al intentar cancelar la cita.');
+      alert('Error de conexión con el servidor.');
     }
   };
 
@@ -329,7 +316,7 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
           )}
         </div>
 
-        {/* Reloj e Información de Reglas en Tiempo Real */}
+        {/* Reloj en Tiempo Real (Limpiado) */}
         <div className="bg-teal-900 text-white px-5 py-3.5 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-teal-300 text-2xl">schedule</span>
@@ -340,14 +327,6 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 text-[11px]">
-            <span className="px-2.5 py-1 rounded-lg bg-teal-800/90 border border-teal-600 text-teal-100">
-              Agendar: <strong>mín. 2 hrs antes</strong>
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-teal-800/90 border border-teal-600 text-teal-100">
-              Cancelar: <strong>mín. 48 hrs antes</strong>
-            </span>
-          </div>
         </div>
 
         {/* VISTA 1: Dashboard del Paciente (Mis Citas) */}
@@ -357,7 +336,7 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
               <div>
                 <h1 className="font-headline text-2xl font-bold text-on-surface tracking-tight">Mis Citas</h1>
                 <p className="text-xs text-on-surface-muted mt-0.5">
-                  Sincronizado dinámicamente con la base de datos • Solo puedes cancelar con 48 hrs o más de anticipación
+                  Sincronizado dinámicamente con la base de datos
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -383,7 +362,7 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
             <div className="flex flex-col gap-3.5 w-full">
               {citasHistorial.length === 0 ? (
                 <div className="bg-white border border-outline-light rounded-xl p-8 text-center text-slate-500 text-xs">
-                  No se encontraron citas registradas en la base de datos. ¡Agenda una nueva cita!
+                  No se encontraron citas registradas. ¡Agenda una nueva cita!
                 </div>
               ) : (
                 citasHistorial.map((cita) => {
@@ -419,19 +398,6 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
                           <p className="text-xs text-slate-600 mt-1">
                             {cita.nombre_medico || `Médico (${cita.num_empleado_medico})`} • Paciente: <strong>{cita.num_paciente}</strong>
                           </p>
-                          <p className="text-[11px] text-slate-500 mt-0.5">
-                            {estaCancelada ? (
-                              <span className="text-red-600 font-medium">Cita cancelada {cita.mot_cancelacion ? `(${cita.mot_cancelacion})` : ''}</span>
-                            ) : yaPaso ? (
-                              <span className="text-slate-400">Esta fecha/hora ya transcurrió ({Math.abs(horasRestantes).toFixed(1)} hrs atrás)</span>
-                            ) : (
-                              <span>
-                                Tiempo restante para la cita: <strong className={horasRestantes >= 48 ? 'text-teal-700' : 'text-amber-700'}>
-                                  {horasRestantes.toFixed(1)} horas
-                                </strong>
-                              </span>
-                            )}
-                          </p>
                         </div>
                       </div>
 
@@ -444,18 +410,18 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
                           {cita.estado}
                         </span>
 
-                        {!estaCancelada && (
+                        {!estaCancelada && !yaPaso && (
                           puedeCancelar ? (
                             <button
                               onClick={() => handleCancelar(cita)}
                               className="px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
                               type="button"
                             >
-                              Cancelar cita (≥ 48hrs)
+                              Cancelar cita
                             </button>
                           ) : (
                             <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg font-medium">
-                              Cancelación no disponible (Menos de 48hrs)
+                              Cancelación no disponible
                             </span>
                           )
                         )}
@@ -475,7 +441,7 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
             <div className="border-b border-outline-light pb-4">
               <h2 className="font-headline text-xl font-bold text-on-surface">Agendar Nueva Consulta</h2>
               <p className="text-xs text-on-surface-muted mt-1">
-                Puedes agendar citas hasta <strong>2 horas antes</strong> de la consulta. Recuerda que solo podrás cancelar citas con <strong>48 horas o más</strong> de anticipación.
+                Completa los datos para programar la cita en el sistema.
               </p>
             </div>
 
@@ -513,10 +479,10 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
             
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-7 flex flex-col gap-5">
-                {/* 1. Selección de Día (7 días próximos) */}
+                {/* 1. Selección de Día */}
                 <div>
                   <label className="text-[11px] font-bold uppercase text-slate-500 block mb-2">
-                    1. Elige un día (Próximos 7 días)
+                    1. Elige un día
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {diasDisponibles.map((item) => {
@@ -545,10 +511,10 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
                   </div>
                 </div>
 
-                {/* 2. Selección de Horario (10 horarios por día con validación de 2h y 48h) */}
+                {/* 2. Selección de Horario */}
                 <div>
                   <label className="text-[11px] font-bold uppercase text-slate-500 block mb-2">
-                    2. Elige un horario (Mínimo 2 hrs de anticipación)
+                    2. Elige un horario
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {diaElegido.horas.map((hora) => {
@@ -572,20 +538,18 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
                           }`}
                         >
                           <span className="block text-xs font-bold">{hora}</span>
-                          <span className={`block text-[10px] ${
+                          <span className={`block text-[10px] mt-0.5 ${
                             !disponibleParaAgendar
                               ? 'text-slate-400'
                               : activo
                               ? 'text-teal-100'
-                              : esCancelable
-                              ? 'text-emerald-600'
-                              : 'text-amber-600'
+                              : 'text-slate-500'
                           }`}>
                             {!disponibleParaAgendar
-                              ? 'No disponible (< 2h)'
-                              : esCancelable
-                              ? `En ${Math.floor(hrs)}h • Cancelable`
-                              : `En ${Math.floor(hrs)}h • Sin cancelación`}
+                              ? 'No disponible'
+                              : !esCancelable
+                              ? 'No podrá cancelarse'
+                              : 'Disponible'}
                           </span>
                         </button>
                       );
@@ -618,28 +582,6 @@ const PortalPaciente = ({ usuario, rol, onCambiarVista, onLogout, mostrarSoloAge
                       ))}
                     </div>
                   )}
-                </div>
-
-                {/* Resumen de anticipación del horario seleccionado */}
-                <div className={`p-3.5 rounded-xl border text-xs ${
-                  horasParaSeleccion < 2
-                    ? 'bg-red-50 border-red-200 text-red-800'
-                    : horasParaSeleccion >= 48
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                    : 'bg-amber-50 border-amber-200 text-amber-800'
-                }`}>
-                  <p className="font-bold">
-                    {horasParaSeleccion < 2
-                      ? 'Horario no válido (Faltan menos de 2 horas)'
-                      : `Faltan ${horasParaSeleccion.toFixed(1)} horas para la cita seleccionada`}
-                  </p>
-                  <p className="text-[11px] mt-0.5">
-                    {horasParaSeleccion < 2
-                      ? 'Por favor selecciona un horario al menos 2 horas después de la hora actual.'
-                      : horasParaSeleccion >= 48
-                      ? 'Cumple con ≥ 48 hrs: esta cita SÍ podrá cancelarse posteriormente.'
-                      : 'Cumple con ≥ 2 hrs para agendar, pero al faltar menos de 48 hrs NO podrá cancelarse.'}
-                  </p>
                 </div>
 
                 <div>

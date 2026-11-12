@@ -1,5 +1,9 @@
 ﻿node_modules/
-backend/__pycache__/
+backend/_pycache_/
+_pycache_/
 backend/.env
+.env
 backend/venv/
+.venv/
+venv/
 error.txt
