@@ -26,7 +26,7 @@ const obtenerIniciales = (nombre) => {
   return (partes[0][0] + partes[1][0]).toUpperCase();
 };
 
-const CitasDelDia = ({ onCambiarVista }) => {
+const CitasDelDia = ({ onCambiarVista, usuario }) => {
   const [ahora, setAhora] = useState(() => new Date());
   const [citas, setCitas] = useState([]);
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
@@ -70,22 +70,22 @@ const CitasDelDia = ({ onCambiarVista }) => {
     return () => clearInterval(intervalo);
   }, [cargarCitasBackend]);
 
-  const manejarMarcarAtendido = async (cita) => {
+  const manejarCheckIn = async (cita) => {
     if (!cita) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/citas/${cita.num_cita}/estado`, {
+      const res = await fetch(`http://localhost:8000/api/citas/${cita.num_cita}/checkin`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'Atendido' })
+        body: JSON.stringify({ id_usuario: usuario?.id || "00000000-0000-0000-0000-000000000000" })
       });
       if (res.ok) {
         cargarCitasBackend(true);
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.detail || 'No se pudo actualizar el estado.');
+        alert(err.detail || 'No se pudo hacer el check-in.');
       }
     } catch (error) {
-      console.error('Error al actualizar cita:', error);
+      console.error('Error al hacer checkin:', error);
       alert('Error de conexión con el backend.');
     }
   };
@@ -343,12 +343,12 @@ const CitasDelDia = ({ onCambiarVista }) => {
 
               <div className="flex gap-2 pt-2">
                 <button
-                  onClick={() => manejarMarcarAtendido(citaSeleccionada)}
-                  disabled={(citaSeleccionada.estado || '').toLowerCase() === 'cancelada' || (citaSeleccionada.estado || '').toLowerCase() === 'atendido' || (citaSeleccionada.estado || '').toLowerCase() === 'completada'}
+                  onClick={() => manejarCheckIn(citaSeleccionada)}
+                  disabled={(citaSeleccionada.estado || '').toLowerCase() !== 'pendiente'}
                   className="flex-1 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-hover transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
                   type="button"
                 >
-                  Marcar Atendido
+                  {(citaSeleccionada.estado || '').toLowerCase() === 'en sala' ? 'Paciente en Sala' : 'Check-In (Llegada)'}
                 </button>
                 <button
                   onClick={() => manejarCancelarCita(citaSeleccionada)}

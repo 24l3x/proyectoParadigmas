@@ -20,7 +20,7 @@ const DashboardSecretaria = ({ usuario, onCambiarVista, onLogout }) => {
           {pestañaActiva === 'calendario' ? (
             <CalendarioSemanal />
           ) : (
-            <CitasDelDia onCambiarVista={onCambiarVista} />
+            <CitasDelDia onCambiarVista={onCambiarVista} usuario={usuario} />
           )}
         </main>
       </div>

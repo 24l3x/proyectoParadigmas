@@ -58,6 +58,10 @@ def listar_citas(
     if num_paciente:
         query = query.filter(models.Cita.num_paciente.ilike(num_paciente.strip()))
     citas = query.order_by(models.Cita.fecha.asc(), models.Cita.hora.asc()).all()
+    for cita in citas:
+        if (cita.estado or "").lower() == "pendiente" and cita.horasRestantes() < 0:
+            cita.cancelar(db, motivo="Cancelada automáticamente (No se presentó)", force=True)
+            
     return citas
 
 
@@ -150,3 +154,20 @@ def actualizar_estado_cita(
     db.commit()
     db.refresh(cita)
     return cita
+
+@app.put("/api/citas/{num_cita}/checkin", response_model=schemas.CitaResponse)
+def checkin_cita(num_cita: int, req: schemas.CheckInRequest, db: Session = Depends(get_db)):
+    asistente = db.query(models.Asistente).filter(models.Asistente.id_usuario == req.id_usuario).first()
+    
+    # Soporte para la vista Demo sin UUID real
+    if not asistente and str(req.id_usuario) == "00000000-0000-0000-0000-000000000000":
+        asistente = db.query(models.Asistente).first()
+
+    if not asistente:
+        raise HTTPException(status_code=403, detail="Usuario no autorizado o no es Secretaria")
+    
+    try:
+        cita_actualizada = asistente.hacerCheckIn(db, num_cita)
+        return cita_actualizada
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

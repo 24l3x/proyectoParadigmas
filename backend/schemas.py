@@ -37,3 +37,6 @@ class CitaResponse(CitaBase):
     class Config:
         orm_mode = True
         from_attributes = True
+        
+class CheckInRequest(BaseModel):
+    id_usuario: UUID

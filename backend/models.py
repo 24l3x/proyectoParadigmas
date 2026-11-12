@@ -148,8 +148,17 @@ class Asistente(Empleado):
         )
         return nueva_cita.agendar(db)
 
-    def hacerCheckIn(self):
-        pass
+    def hacerCheckIn(self, db: Session, num_cita: int):
+        cita = db.query(Cita).filter(Cita.num_cita == num_cita).first()
+        if not cita:
+            raise ValueError("Cita no encontrada.")
+        if (cita.estado or "").lower() != "pendiente":
+            raise ValueError("Solo se puede hacer check-in a citas en estado 'Pendiente'.")
+        
+        cita.estado = "En sala"
+        db.commit()
+        db.refresh(cita)
+        return cita
 
 
 class Admin(Empleado):
@@ -230,8 +239,8 @@ class Cita(Base):
         db.refresh(self)
         return self
 
-    def cancelar(self, db: Session, motivo: str = "Cancelada por el usuario"):
-        if not self.puedeCancelarse():
+    def cancelar(self, db: Session, motivo: str = "Cancelada por el usuario", force: bool = False):
+        if not force and not self.puedeCancelarse():
             raise ValueError("Solo se pueden cancelar citas con 48 horas o más de anticipación.")
         self.estado = "Cancelada"
         self.mot_cancelacion = motivo
